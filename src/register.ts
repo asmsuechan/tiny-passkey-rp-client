@@ -82,6 +82,9 @@ export const postCredential = (
     .join("");
   const registerParams = {
     id: credential.id,
+    credentialId: [...new Uint8Array(credential.rawId)]
+      .map((x) => x.toString(16).padStart(2, "0"))
+      .join(""),
     userId: userId,
     transports: response.getTransports(),
     hexAttestationObject,
