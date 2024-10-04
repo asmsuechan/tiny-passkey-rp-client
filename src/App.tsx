@@ -1,5 +1,5 @@
 import "./App.css";
-import { authenticate } from "./authenticate";
+import { authenticate, login } from "./authenticate";
 import { getChallenge, postCredential, register } from "./register";
 import { useState } from "react";
 import { createUser } from "./user";
@@ -25,7 +25,6 @@ function App() {
           className="w-full"
           onClick={async () => {
             const user = await createUser(name);
-            console.log(user);
             const challenge = await getChallenge();
             const cred = await register(user, challenge);
             await postCredential(cred, user.id);
@@ -39,8 +38,8 @@ function App() {
           className="w-full"
           onClick={async () => {
             const challenge = await getChallenge();
-            authenticate(challenge.challenge);
-            console.log("auth");
+            const pubKeyCred = await authenticate(challenge.challenge);
+            await login(name, pubKeyCred);
           }}
         >
           Login

@@ -1,7 +1,7 @@
 import { User } from "./user";
 
 // 新しい認証情報の作成/登録
-export const register = (user: User, challenge: Challenge) => {
+export const register = async (user: User, challenge: Challenge) => {
   // RelyingPartyの名前
   // https://w3c.github.io/webauthn/#dom-publickeycredentialcreationoptions-rp
   const rp = {
@@ -16,6 +16,8 @@ export const register = (user: User, challenge: Challenge) => {
   // ]);
   // これは入力させる
   // 認証器で作る(?)公開鍵の情報。これもサーバーから取得する？
+  // > This Relying Party will accept either an ES256 or RS256 credential, but
+  // > prefers an ES256 credential.
   const pubKeyCredParams = [
     {
       type: "public-key",
@@ -26,7 +28,8 @@ export const register = (user: User, challenge: Challenge) => {
       alg: -257,
     } as PublicKeyCredentialParameters,
   ];
-  const attestation = "direct" as AttestationConveyancePreference;
+  // NOTE: directのみ実装。
+  // const attestation = "direct" as AttestationConveyancePreference;
   // サーバーから取得したChallenge。ランダムな値である必要がある
   // const challenge = new Uint8Array([
   //   0x8c, 0x0a, 0x26, 0xff, 0x22, 0x91, 0xc1, 0xe9, 0xb9, 0x4e, 0x2e, 0x17,
@@ -43,9 +46,13 @@ export const register = (user: User, challenge: Challenge) => {
         displayName: user.displayName,
       },
       pubKeyCredParams,
-      attestation,
+      // attestation,
       challenge: new TextEncoder().encode(challenge.challenge),
-      timeout: 60000,
+      // timeout: 60000,
+      // authenticatorSelection: {
+      //   authenticatorAttachment: "platform",
+      //   requireResidentKey: true,
+      // },
       // ERROR DOMException: The 'appid' extension is only valid when requesting an assertion for a pre-existing credential that was registered using the legacy FIDO U2F API.
       // appidを使えるのは、過去にlegacy FIDO U2F JavaScript APIで登録されている場合のみ
       // extensions: {
@@ -67,13 +74,11 @@ export const register = (user: User, challenge: Challenge) => {
     });
 };
 
-export const postCredential = (
+export const postCredential = async (
   credential: PublicKeyCredential,
   userId: string
 ) => {
   const response = credential.response as AuthenticatorAttestationResponse;
-  // NOTE: ArrayBufferを16進数の文字列に変換する
-  // そのままでも問題ない
   const hexAttestationObject = [...new Uint8Array(response.attestationObject)]
     .map((x) => x.toString(16).padStart(2, "0"))
     .join("");
@@ -97,6 +102,7 @@ export const postCredential = (
       "Content-Type": "application/json",
     },
     body: JSON.stringify(registerParams),
+    credentials: "include",
   }).then((res) => res.json());
 };
 
@@ -104,11 +110,12 @@ type Challenge = {
   challenge: string;
 };
 
-export const getChallenge = (): Promise<Challenge> => {
+export const getChallenge = async (): Promise<Challenge> => {
   return fetch("http://localhost:4000/auth/challenge", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
   }).then((res) => res.json());
 };
