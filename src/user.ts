@@ -2,6 +2,7 @@ export type User = {
   id: string;
   name: string;
   displayName: string;
+  userHandle: string;
 };
 
 export const createUser = (name: string): Promise<User> => {

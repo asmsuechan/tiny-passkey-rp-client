@@ -36,6 +36,9 @@ export const login = async (
 ) => {
   // NOTE: TypeScriptとしてはAuthenticatorResponseと判断されるが、実際はAuthenticatorAssertionResponse
   const response = pubKeyCred.response as AuthenticatorAssertionResponse;
+  const userHandle = response.userHandle
+    ? new TextDecoder().decode(response.userHandle)
+    : null;
   const hexSignature = [...new Uint8Array(response.signature)]
     .map((x) => x.toString(16).padStart(2, "0"))
     .join("");
@@ -52,6 +55,7 @@ export const login = async (
     type: pubKeyCred.type,
     rawId: pubKeyCred.rawId,
     userName,
+    userHandle,
     hexSignature,
     hexClientDataJson,
     hexAuthData,

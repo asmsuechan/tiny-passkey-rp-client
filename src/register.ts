@@ -41,7 +41,7 @@ export const register = async (user: User, challenge: Challenge) => {
     publicKey: {
       rp,
       user: {
-        id: new TextEncoder().encode(user.id),
+        id: new TextEncoder().encode(user.userHandle),
         name: user.name,
         displayName: user.displayName,
       },
@@ -90,7 +90,7 @@ export const postCredential = async (
     credentialId: [...new Uint8Array(credential.rawId)]
       .map((x) => x.toString(16).padStart(2, "0"))
       .join(""),
-    userId: userId,
+    userId,
     transports: response.getTransports(),
     hexAttestationObject,
     hexClientDataJson,
